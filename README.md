@@ -21,8 +21,8 @@
 - 🧹 **Clear All Entries**  
   Erase all stored data and reset internal IDs.
 
-- 📤 **Export as CSV**  
-  Export all recorded impulses to a CSV file, ready for sharing or analysis.
+- 📤 **Export as Excel file**  
+  Export all recorded impulses to a KLSX file, ready for sharing or analysis.
 
 - 🗃️ **Offline Storage**  
   Uses SQLite for local data persistence, even without internet.
