@@ -5,18 +5,17 @@ import { useKeepAwake } from 'expo-keep-awake';
 import * as Sharing from 'expo-sharing';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ImpulseItem from './components/ImpulseItem';
+import Loading from './components/Loading';
 import {
   clearAllImpulses,
   getAllImpulses,
@@ -25,7 +24,10 @@ import {
   insertImpulse,
   updateImpulseComment
 } from './database/impulses';
+import styles from './styles';
 import { formatTimestamp, syncTimeWithGPS, syncTimeWithGPSFallback } from './utils/time';
+
+const IMPULSE_ITEM_HEIGHT = 60; // Altura en píxeles (ajusta según diseño)
 
 export default function App() {
   const [entries, setEntries] = useState<ImpulseEntry[]>([]);
@@ -75,7 +77,7 @@ export default function App() {
     const interval = setInterval(() => {
       // Hora sincronizada = hora local - offset
       setCurrentTime(new Date(Date.now() - timeOffset));
-    }, 100);
+    }, 1000);
     return () => clearInterval(interval);
   }, [timeOffset]);
 
@@ -162,17 +164,10 @@ export default function App() {
   };
 
   if (loading) {
-    // Pantalla de carga mientras sincroniza
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066cc" />
-        <Text style={styles.loadingText}>Sincronizando reloj...</Text>
-      </View>
-    );
+    return <Loading />;
   } else {
     return (
       <SafeAreaView style={styles.safeArea}>
-
         <KeyboardAvoidingView style={styles.container} behavior={Platform.select({ ios: 'padding' })}>
           <View style={styles.listContainer}>
             {currentTime && <Text style={styles.clock}>{formatTimestamp(currentTime)}</Text>}
@@ -180,7 +175,7 @@ export default function App() {
             <FlatList
               ref={flatListRef}
               data={entries}
-              keyExtractor={(item) => item.id.toString()}
+              keyExtractor={(item) => `${item.id}`}
               renderItem={({ item, index }) => (
                 <ImpulseItem
                   item={item}
@@ -190,6 +185,11 @@ export default function App() {
                   onBlur={handleCommentBlur}
                 />
               )}
+              getItemLayout={(data, index) => ({
+                length: IMPULSE_ITEM_HEIGHT,
+                offset: IMPULSE_ITEM_HEIGHT * index,
+                index,
+              })}
             />
           </View>
           <View style={styles.bottomContainer}>
@@ -211,82 +211,3 @@ export default function App() {
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  listContainer: { flex: 0.85, padding: 10 },
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-
-  bottomContainer: {
-    flex: 0.15,
-    paddingHorizontal: 10,
-    paddingVertical: 20,
-    backgroundColor: '#f9f9f9',
-    justifyContent: 'space-around',
-  },
-  header: {
-    fontSize: 20, fontWeight: '600', marginBottom: 8, textAlign: 'center',
-  },
-
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  buttonDanger: {
-    backgroundColor: '#cc0000',
-    padding: 14,
-    borderRadius: 14,
-    alignItems: 'center',
-    // marginTop: 10,
-  },
-  clock: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#222',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 18,
-    color: '#444',
-  },
-  buttonLarge: {
-    backgroundColor: '#0066cc',
-    paddingVertical: 18, // altura mayor
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
-  buttonTextLarge: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  buttonHalf: {
-    flex: 1,
-    height: 60,
-    backgroundColor: '#444',
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonHalfLeft: {
-    marginRight: 10, // Separación entre botones
-  },
-});
